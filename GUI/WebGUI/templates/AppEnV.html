@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Eye example</title>
+</head>
+<body>
+    <form id="Config" method="post" name="Config">
+        <h2>Photoreceptor</h2>
+        <label for="sticks">Is this person blind?</label>
+        <select name="sticks" id="sticks" required="required">
+            <option value="no" selected>No</option>
+            <option value="yes">Yes</option>
+        </select><br><br>
+        <label for="cones">Is this person colorblind?</label>
+        <select name="cones" id="cones" required="required">
+            <option value="no" selected>No</option>
+            <option value="yes">Yes</option>
+        </select><br><br>
+        <h2>Iris</h2>
+        <label for="eyeColor">What is a person's eye color?</label>
+        <input type="color" name="eyeColor" id="eyeColor" required="required"><br><br>
+        <h2>Lens</h2>
+        <label for="lens">How severe is this person's vision impairment?</label>
+        <input type="number" name="lens" id="lens" required="required"><br><br>
+    </form>
+
+<!--    <form action="/" method="post">-->
+<!--    <label for="language">Language</label>-->
+<!--    <select id="language" name="language" required="required" onchange="if(this.value) window.location.href=this.value;">-->
+<!--        <option value="/AppEnV" selected>English</option>-->
+<!--        <option value="/AppUaV">Ukrainian</option>-->
+<!--    </select>-->
+<!--    <button type="submit">Submit</button>-->
+<!--    <br><br>-->
+<!--    </form>-->
+
+    <img src="{{ url_for('video_feed') }}" alt="Video Stream">
+
+    <script>
+        const form = document.getElementById('Config');
+
+        form.addEventListener('change', () => {
+            fetch('/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sticks: document.getElementById('sticks').value,
+                    cones:  document.getElementById('cones').value,
+                    eyeColor: document.getElementById('eyeColor').value,
+                    lens: document.getElementById('lens').value
+                })
+            })
+            .then(response => response.json())
+        });
+    </script>
+</body>
+</html>
