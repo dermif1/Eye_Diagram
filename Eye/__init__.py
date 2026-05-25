@@ -109,7 +109,7 @@ class Lens:
         return min(max(3, raw_ksize), 99)
 
 class Eye:
-    def __init__(self, iris: Iris, photoreceptor: Photoreceptor, lens: Lens, MARKER_WIDTH: float = .20, debug: bool = False) -> None:
+    def __init__(self, iris: Iris, photoreceptor: Photoreceptor, lens: Lens, camera: int, MARKER_WIDTH: float = .20, debug: bool = False) -> None:
 
         """
 
@@ -123,6 +123,7 @@ class Eye:
         self.iris = iris
         self.photoreceptor = photoreceptor
         self.lens = lens
+        self.camera=camera
         self.MARKER_WIDTH: float = MARKER_WIDTH
         self.debug = debug
         self.focal_length = None
@@ -181,7 +182,7 @@ class Eye:
 
         distance=None
 
-        cam = cv2.VideoCapture(0)
+        cam = cv2.VideoCapture(self.camera)
 
         if not cam.isOpened():
             print("Error: Could not open camera.")
@@ -234,6 +235,10 @@ class Eye:
                     #   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
                 #else: yield (b'--frame\r\n'
                 #       b'Content-Type: image/jpeg\r\n\r\n' + b'\r\n')
+                else:
+                    height, width, channels = frame.shape
+                    cv2.rectangle(frame, (0,0), (width,height), (0,0,0), -1)
+                    cv2.imshow('Camera Image', frame)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -253,7 +258,7 @@ class Eye:
         aruco_params = aruco.DetectorParameters()
         detector = aruco.ArucoDetector(aruco_dict, aruco_params)
 
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(self.camera)
         print(f"Станьте на відстані приблизно {CALIBRATION_DIST}м від аркуша та натисніть 'C' для калібрування.")
 
         while True:
@@ -305,7 +310,7 @@ class Eye:
         :return: Width of object
         """
 
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(self.camera)
         print("Наведіть камеру на об'єкт для вимірювання його реальної ширини.")
 
         while True:

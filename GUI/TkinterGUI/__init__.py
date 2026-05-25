@@ -1,12 +1,43 @@
 import os
 
 from Eye import *
+from cv2_enumerate_cameras import enumerate_cameras
 from GUI import WebGUI
 import tkinter as tk
 from tkinter import colorchooser
 import multiprocessing as mp
 import json
 
+def chooseCamera() -> int:
+    listOfCameras = enumerate_cameras(cv2.CAP_ANY)
+
+    window = tk.Tk()
+    window.title("Choose camera")
+    window.geometry("512x512")
+
+    label = tk.Label(window, text="Choose camera", font=("Arial", 20))
+    label.pack()
+
+    listbox = tk.Listbox(window, height=6, selectmode=tk.SINGLE, width=250)
+    listbox.pack(pady=20)
+
+    response = tk.IntVar()
+
+    for camera in listOfCameras:
+        listbox.insert(tk.END, f"Name: {camera.name}")
+
+    btn = tk.Button(
+        window,
+        text="Submit",
+        command=lambda: (
+            response.set(listOfCameras[listbox.curselection()[0]].index) if len(listbox.curselection()) > 0 else None,
+            window.destroy()
+        )
+    )
+    btn.pack(pady=10)
+    window.mainloop()
+
+    return response.get()
 
 class TkinterGUI:
     def __init__(self):
@@ -14,11 +45,10 @@ class TkinterGUI:
         self.photoreceptor: Photoreceptor = Photoreceptor(True, True)
         self.lens: Lens = Lens(0)
 
-        self.eye: Eye = Eye(self.iris, self.photoreceptor, self.lens, debug=True)
+        self.eye: Eye = Eye(self.iris, self.photoreceptor, self.lens, chooseCamera(), debug=True)
 
         self.process = mp.Process(target=self.eye.getImage)
         self.process.start()
-
 
         self.window = tk.Tk()
         self.window.title("Eye diagram: Config")
@@ -30,15 +60,15 @@ class TkinterGUI:
         frame1 = tk.Label(self.window, text="PHOTORECEPTOR", font=("Arial", 20))
         frame1.pack()
         labelSubHeader1_1 = tk.Checkbutton(self.window, text="Sticks", variable=self.sticks, command=self.photoreceptorSticksChanger, )
-        labelSubHeader1_1.pack()
+        labelSubHeader1_1.pack(pady=20)
         labelSubHeader1_2 = tk.Checkbutton(self.window, text="Cones", variable=self.cones, command=self.photoreceptorConesChanger, )
-        labelSubHeader1_2.pack()
+        labelSubHeader1_2.pack(pady=20)
 
         pick_button = tk.Button(self.window, text="Change Iris color", command=self.irisChanger, font=("Arial", 12))
         pick_button.pack(pady=20)
 
         frame2 = tk.LabelFrame(self.window, text="LENS")
-        frame2.pack()
+        frame2.pack(pady=20)
         scale = tk.Scale(
             frame2,
             from_=-4.5,  # Мінімальне значення (важливо: з підкресленням)
@@ -50,7 +80,7 @@ class TkinterGUI:
             command=self.lensChanger
         )
         scale.set(20)
-        scale.pack()
+        scale.pack(pady=20)
         description = tk.Message(self.window, text="ametropia_diopters: Degree of vision impairment (0.0 — perfect, ‘-’ — myopia, ‘+’ — hyperopia).", font=("Arial", 12), width=350)
         description.pack()
 
@@ -92,7 +122,6 @@ class TkinterGUI:
         print("Welcome to Eye diagram")
         self.window.mainloop()
         self.process.join()
-        self.window.destroy()
         self.process.close()
         os.remove(os.path.abspath("config.json"))
         os.remove(os.path.abspath("config.old.json"))
